@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق القرآن الكريم</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(rgba(245, 245, 245, 0.9), rgba(245, 245, 245, 0.9)),
+                        url('https://i.pinimg.com/564x/0c/5f/cd/0c5fcd180d005b23de12aeafd4275e9a.jpg'); /* خلفية إسلامية */
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255,255,255,0.95); /* خلفية شبه شفافة */
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            backdrop-filter: blur(3px); /* تأثير ضبابي */
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .logo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50px;
+            height: 50px;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2));
+        }
+        input, button {
+            padding: 12px;
+            margin: 10px 5px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            width: calc(100% - 22px);
+            max-width: 400px;
+            transition: all 0.3s ease;
+        }
+        input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52,152,219,0.3);
+        }
+        button {
+            background-color: #2ecc71; /* لون أخضر هادئ */
+            color: #fff;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #27ae60; /* لون أخضر داكن */
+            transform: translateY(-1px);
+        }
+        .result {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .verse {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(236,240,241,0.8);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            backdrop-filter: blur(2px);
+        }
+        .verse strong {
+            color: #e74c3c;
+            font-size: 1.1em;
+        }
+        .tafsir {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(249,249,249,0.9);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .history {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            background: #3498db; /* لون أزرق هادئ */
+            color: #fff;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .history:hover {
+            transform: scale(1.05);
+        }
+        .history-popup {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            text-align: left;
+            backdrop-filter: blur(3px);
+        }
+        .navigation-buttons {
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        .navigation-buttons button {
+            margin: 5px;
+            background-color: #9b59b6; /* لون بنفسجي هادئ */
+        }
+        .options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .options button {
+            background-color: #e67e22; /* لون برتقالي هادئ */
+            min-width: 200px;
+            padding: 15px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://png.pngtree.com/png-clipart/20220302/original/pngtree-handdrawn-opened-quran-png-image_7361510.png" alt="شعار القرآن" class="logo">
+        <div id="history" class="history" onclick="toggleHistoryPopup()">📜 سجل البحث</div>
+        <div id="history-popup" class="history-popup"></div>
+        <h1>📖 تطبيق القرآن الكريم</h1>
+        <input type="text" id="surah_name" placeholder="اكتب اسم السورة (مثال: البقرة)">
+        <button onclick="searchSurah()">🔍 بحث</button>
+        <div id="result" class="result"></div>
+        <div class="navigation-buttons" id="navigation-buttons">
+            <button onclick="previousVerse()">⬅️ الآية السابقة</button>
+            <button onclick="nextVerse()">➡️ الآية التالية</button>
+            <button onclick="nextSurahOptions()">📜 السورة التالية</button>
+        </div>
+    </div>
+
+    <script>
+        // قائمة السور
+        const surahs = {
+            1: "الفاتحة", 2: "البقرة", 3: "آل عمران", 4: "النساء", 5: "المائدة",
+            6: "الأنعام", 7: "الأعراف", 8: "الأنفال", 9: "التوبة", 10: "يونس",
+            11: "هود", 12: "يوسف", 13: "الرعد", 14: "إبراهيم", 15: "الحجر",
+            16: "النحل", 17: "الإسراء", 18: "الكهف", 19: "مريم", 20: "طه",
+            21: "الأنبياء", 22: "الحج", 23: "المؤمنون", 24: "النور", 25: "الفرقان",
+            26: "الشعراء", 27: "النمل", 28: "القصص", 29: "العنكبوت", 30: "الروم",
+            31: "لقمان", 32: "السجدة", 33: "الأحزاب", 34: "سبأ", 35: "فاطر",
+            36: "يس", 37: "الصافات", 38: "ص", 39: "الزمر", 40: "غافر",
+            41: "فصلت", 42: "الشورى", 43: "الزخرف", 44: "الدخان", 45: "الجاثية",
+            46: "الأحقاف", 47: "محمد", 48: "الفتح", 49: "الحجرات", 50: "ق",
+            51: "الذاريات", 52: "الطور", 53: "النجم", 54: "القمر", 55: "الرحمن",
+            56: "الواقعة", 57: "الحديد", 58: "المجادلة", 59: "الحشر", 60: "الممتحنة",
+            61: "الصف", 62: "الجمعة", 63: "المنافقون", 64: "التغابن", 65: "الطلاق",
+            66: "التحريم", 67: "الملك", 68: "القلم", 69: "الحاقة", 70: "المعارج",
+            71: "نوح", 72: "الجن", 73: "المزمل", 74: "المدثر", 75: "القيامة",
+            76: "الإنسان", 77: "المرسلات", 78: "النبأ", 79: "النازعات", 80: "عبس",
+            81: "التكوير", 82: "الانفطار", 83: "المطففين", 84: "الانشقاق", 85: "البروج",
+            86: "الطارق", 87: "الأعلى", 88: "الغاشية", 89: "الفجر", 90: "البلد",
+            91: "الشمس", 92: "الليل", 93: "الضحى", 94: "الشرح", 95: "التين",
+            96: "العلق", 97: "القدر", 98: "البينة", 99: "الزلزلة", 100: "العاديات",
+            101: "القارعة", 102: "التكاثر", 103: "العصر", 104: "الهمزة", 105: "الفيل",
+            106: "قريش", 107: "الماعون", 108: "الكوثر", 109: "الكافرون", 110: "النصر",
+            111: "المسد", 112: "الإخلاص", 113: "الفلق", 114: "الناس"
+        };
+
+        let currentSurahNumber = 1;
+        let currentVerseNumber = 1;
+        let historyLog = [];
+
+        // دالة للبحث عن السورة
+        async function searchSurah() {
+            const surahName = document.getElementById('surah_name').value;
+            const surahNumber = Object.keys(surahs).find(key => surahs[key] === surahName);
+
+            if (surahNumber) {
+                currentSurahNumber = parseInt(surahNumber);
+                currentVerseNumber = 1; // إعادة تعيين رقم الآية
+                document.getElementById('result').innerHTML = `
+                    <h2>${surahs[currentSurahNumber]}</h2>
+                    <div class="options">
+                        <button onclick="showFullSurah(${currentSurahNumber})">📖 عرض السورة كاملة</button>
+                        <button onclick="showVerse(${currentSurahNumber}, ${currentVerseNumber})">🎯 عرض آية محددة</button>
+                    </div>
+                `;
+                updateHistory(`بحث: ${surahs[currentSurahNumber]}`);
+                document.getElementById('navigation-buttons').style.display = 'block'; // إظهار الأزرار
+            } else {
+                document.getElementById('result').innerHTML = `<p>❌ لم أتعرف على السورة. يرجى المحاولة مرة أخرى.</p>`;
+            }
+        }
+
+        // دالة لعرض السورة كاملة
+        async function showFullSurah(surahNumber) {
+            const response = await fetch(`/full_surah/${surahNumber}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                let versesHtml = '';
+                data.verses.forEach(verse => {
+                    versesHtml += `
+                        <div class="verse">
+                            <strong>آية ${verse.number}:</strong> ${verse.text}
+                        </div>
+                    `;
+                });
+                document.getElementById('result').innerHTML = versesHtml;
+                updateHistory(`عرض السورة كاملة: ${surahs[surahNumber]}`);
+            } else {
+                document.getElementById('result').innerHTML = `<p>${data.message}</p>`;
+            }
+        }
+
+        // دالة لعرض آية محددة
+        async function showVerse(surahNumber, verseNumber) {
+            const response = await fetch(`/verse/${surahNumber}/${verseNumber}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                document.getElementById('result').innerHTML = `
+                    <div class="verse">
+                        <strong>الآية ${verseNumber}:</strong> ${data.verse_text}
+                    </div>
+                    <div class="tafsir">
+                        <button onclick="showTafsir(${surahNumber}, ${verseNumber})">عرض التفسير</button>
+                    </div>
+                `;
+                updateHistory(`عرض الآية: ${surahs[surahNumber]} - الآية ${verseNumber}`);
+            } else {
+                document.getElementById('result').innerHTML = `<p>${data.message}</p>`;
+            }
+        }
+
+        // دالة لعرض التفسير
+        async function showTafsir(surahNumber, verseNumber) {
+            const response = await fetch(`/tafsir/${surahNumber}/${verseNumber}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                document.querySelector('.tafsir').innerHTML = `
+                    <strong>التفسير:</strong> ${data.tafsir_text}
+                `;
+                updateHistory(`عرض التفسير: ${surahs[surahNumber]} - الآية ${verseNumber}`);
+            } else {
+                document.querySelector('.tafsir').innerHTML = `<p>${data.message}</p>`;
+            }
+        }
+
+        // دالة للانتقال إلى الآية التالية
+        async function nextVerse() {
+            currentVerseNumber++;
+            const response = await fetch(`/verse/${currentSurahNumber}/${currentVerseNumber}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                document.getElementById('result').innerHTML = `
+                    <div class="verse">
+                        <strong>الآية ${currentVerseNumber}:</strong> ${data.verse_text}
+                    </div>
+                    <div class="tafsir">
+                        <button onclick="showTafsir(${currentSurahNumber}, ${currentVerseNumber})">عرض التفسير</button>
+                    </div>
+                `;
+                updateHistory(`عرض الآية: ${surahs[currentSurahNumber]} - الآية ${currentVerseNumber}`);
+            } else {
+                currentVerseNumber--; // التراجع إذا لم توجد آية تالية
+                alert("لا توجد آية تالية في هذه السورة.");
+            }
+        }
+
+        // دالة للرجوع إلى الآية السابقة
+        async function previousVerse() {
+            if (currentVerseNumber > 1) {
+                currentVerseNumber--;
+                const response = await fetch(`/verse/${currentSurahNumber}/${currentVerseNumber}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    document.getElementById('result').innerHTML = `
+                        <div class="verse">
+                            <strong>الآية ${currentVerseNumber}:</strong> ${data.verse_text}
+                        </div>
+                        <div class="tafsir">
+                            <button onclick="showTafsir(${currentSurahNumber}, ${currentVerseNumber})">عرض التفسير</button>
+                        </div>
+                    `;
+                    updateHistory(`عرض الآية: ${surahs[currentSurahNumber]} - الآية ${currentVerseNumber}`);
+                } else {
+                    alert("لا توجد آية سابقة في هذه السورة.");
+                }
+            } else {
+                alert("أنت في بداية السورة.");
+            }
+        }
+
+        // دالة لعرض خيارات السورة التالية
+        async function nextSurahOptions() {
+            const nextSurahNumber = currentSurahNumber + 1;
+            if (nextSurahNumber > 114) {
+                alert("لا توجد سورة تالية.");
+                return;
+            }
+
+            document.getElementById('result').innerHTML = `
+                <h2>${surahs[nextSurahNumber]}</h2>
+                <div class="options">
+                    <button onclick="showFullSurah(${nextSurahNumber})">📖 عرض السورة كاملة</button>
+                    <button onclick="startNewSurah(${nextSurahNumber})">🎯 عرض آية محددة</button>
+                </div>
+            `;
+            updateHistory(`انتقال إلى: ${surahs[nextSurahNumber]}`);
+        }
+
+        // دالة جديدة لبدء سورة جديدة
+        function startNewSurah(surahNumber) {
+            currentSurahNumber = surahNumber;
+            currentVerseNumber = 1;
+            showVerse(currentSurahNumber, currentVerseNumber);
+        }
+
+        // دالة لتحديث تاريخ البحث
+        function updateHistory(action) {
+            historyLog.push(action);
+            document.getElementById('history-popup').innerHTML = historyLog.join('<br>');
+        }
+
+     // دالة لعرض/إخفاء نافذة تاريخ البحث
+        function toggleHistoryPopup() {
+            const popup = document.getElementById('history-popup');
+            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>
